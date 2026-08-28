@@ -1,0 +1,53 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="awsTutorial"
+run/main_scene="uid://bwungqlidipil"
+config/features=PackedStringArray("4.6", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[audio]
+
+general/ios/session_category=2
+driver/enable_input=true
+driver/mix_rate=48000
+
+[autoload]
+
+AmazonGameLiftServerModule="*uid://do7jdwanipoig"
+AWSModule="*uid://bpr1vju44my21"
+EmbeddedVoiceChatPluginModule="*uid://bs4nv7gs5ht4g"
+
+[debug]
+
+file_logging/amazon_game_lift_server_log_path="logs/{project_name}_log_{index}.{ext}"
+file_logging/amazon_game_lift_server_max_logs=20
+
+[display]
+
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/amazon_game_lift_server/plugin.cfg", "res://addons/aws_cognito/plugin.cfg", "res://addons/aws_core/plugin.cfg", "res://addons/aws_gamelift/plugin.cfg", "res://addons/aws_graphql/plugin.cfg", "res://addons/embedded_voice_chat/plugin.cfg")
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true

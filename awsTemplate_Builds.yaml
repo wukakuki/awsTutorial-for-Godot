@@ -1,0 +1,184 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: awsTutorial(S3 bucket for builds)
+Parameters:
+  ResourceNamePrefix:
+    Description: Prefix of resource name
+    Default: awstutorial
+    Type: String
+Resources:
+  awsTutorialBuildsBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Join
+        - ''
+        - - !Ref ResourceNamePrefix
+          - "-builds-"
+          - !Ref AWS::Region
+      AbacStatus: "Disabled"
+      PublicAccessBlockConfiguration:
+        RestrictPublicBuckets: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        BlockPublicAcls: true
+      OwnershipControls:
+        Rules:
+        - ObjectOwnership: "BucketOwnerEnforced"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - BucketKeyEnabled: true
+          BlockedEncryptionTypes:
+            EncryptionType:
+            - "SSE-C"
+          ServerSideEncryptionByDefault:
+            SSEAlgorithm: "AES256"
+      Tags:
+      - Value: "Youtube Streamer"
+        Key: "Usage"
+  awsTutorialCreateBuildsFoldersRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join
+        - ''
+        - - !Ref ResourceNamePrefix
+          - _CreateBuildsFolders_Role
+      Description: Role for creating folders in the builds bucket
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: !Join
+            - ''
+            - - !Ref ResourceNamePrefix
+              - _CreateBuildsFolders_Policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !Join
+                    - ''
+                    - - !GetAtt awsTutorialBuildsBucket.Arn
+                      - /*
+                  - !GetAtt awsTutorialBuildsBucket.Arn
+        - PolicyName: !Join
+            - ''
+            - - !Ref ResourceNamePrefix
+              - _CreateBuildsFolders_Logs_Policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+  awsTutorialCreateBuildsFoldersLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Join
+        - ''
+        - - !Ref ResourceNamePrefix
+          - _CreateBuildsFolders_Lambda
+      Description: Lambda function for creating folders in the builds bucket
+      Architectures:
+        - arm64
+      Code:
+        ZipFile: |
+          const { S3Client, ListObjectsV2Command, PutObjectCommand, DeleteObjectsCommand } = require("@aws-sdk/client-s3");
+          const cfnResponse = require('cfn-response');
+          const s3 = new S3Client();
+          
+          exports.handler = async (event, context) => {
+            const bucket = event.ResourceProperties.BucketName;
+            const folder = event.ResourceProperties.FolderName;
+          
+            try {
+              if (event.RequestType === 'Create' || event.RequestType === 'Update') {
+                await s3.send(new PutObjectCommand({ Bucket: bucket, Key: folder }));
+              } else if (event.RequestType === 'Delete') {
+                const normalizedPrefix = folder.endsWith("/") ? folder : `${folder}/`;
+                
+                let isTruncated = true;
+                let continuationToken = undefined;
+          
+                while (isTruncated) {
+                  const listCommand = new ListObjectsV2Command({
+                    Bucket: bucket,
+                    Prefix: normalizedPrefix,
+                    ContinuationToken: continuationToken,
+                  });
+                
+                  const listResponse = await s3.send(listCommand);
+                
+                  if (!listResponse.Contents || listResponse.Contents.length === 0) {
+                    console.log("No objects found to delete.");
+                    break;
+                  }
+                  
+                  const objectsToDelete = listResponse.Contents.map((object) => ({
+                    Key: object.Key,
+                  }));
+                
+                  const deleteCommand = new DeleteObjectsCommand({
+                    Bucket: bucket,
+                    Delete: {
+                      Objects: objectsToDelete,
+                      Quiet: true,
+                    },
+                  });
+                
+                  await s3.send(deleteCommand);
+                  console.log(`Deleted ${objectsToDelete.length} objects.`);
+                
+                  isTruncated = listResponse.IsTruncated;
+                  continuationToken = listResponse.NextContinuationToken;
+                }
+                
+                // await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: folder }));
+              }
+              await cfnResponse.send(event, context, cfnResponse.SUCCESS, {});
+            } catch (err) {
+              console.error(err);
+              await cfnResponse.send(event, context, cfnResponse.FAILED, err);
+            }
+          };
+      Handler: index.handler
+      Role: !GetAtt awsTutorialCreateBuildsFoldersRole.Arn
+      Runtime: nodejs20.x
+  awsTutorialCreateCloudFormationTemplateFolder:
+    Type: AWS::CloudFormation::CustomResource
+    DependsOn:
+      - awsTutorialCreateBuildsFoldersLambdaFunction
+      - awsTutorialBuildsBucket
+    Properties:
+      ServiceToken: !GetAtt awsTutorialCreateBuildsFoldersLambdaFunction.Arn
+      BucketName: !Ref awsTutorialBuildsBucket
+      FolderName: 'cloudformation_template/'
+  awsTutorialCreateAppsyncResolverFolder:
+    Type: AWS::CloudFormation::CustomResource
+    DependsOn:
+      - awsTutorialCreateBuildsFoldersLambdaFunction
+      - awsTutorialBuildsBucket
+    Properties:
+      ServiceToken: !GetAtt awsTutorialCreateBuildsFoldersLambdaFunction.Arn
+      BucketName: !Ref awsTutorialBuildsBucket
+      FolderName: 'appsync_resolver/'
+  awsTutorialCreateLambdaFunctionFolder:
+    Type: AWS::CloudFormation::CustomResource
+    DependsOn:
+      - awsTutorialCreateBuildsFoldersLambdaFunction
+      - awsTutorialBuildsBucket
+    Properties:
+      ServiceToken: !GetAtt awsTutorialCreateBuildsFoldersLambdaFunction.Arn
+      BucketName: !Ref awsTutorialBuildsBucket
+      FolderName: 'lambda_function/'

@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: awsTutorial(main)
+Parameters:
+    ResourceNamePrefix:
+        Description: Prefix of resource name
+        Default: awstutorial
+        Type: String
+    UGCPartTemplateUrl:
+        Description: Url of the cloud formation template for cognito, cloudwatch
+            log  group, S3 resources.
+        Type: String
+        Default: https://awstutorial-builds-ap-northeast-2.s3.ap-northeast-2.amazonaws.com/cloudformation_template/awsTemplate_UGC.yaml
+Resources:
+    awsTutorialUGCStack:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: !Ref UGCPartTemplateUrl
+            Parameters:
+                ResourceNamePrefix: !Ref ResourceNamePrefix
+            Tags:
+                -   Key: Usage
+                    Value: Youtube Streamer
+Outputs:
+    awsTutorialRegion:
+        Description: AWS Region
+        Value: !Ref AWS::Region
+        Export:
+            Name: !Sub '1:Region'
+    awsTutorialCognitoUserPoolId:
+        Description: Cognito User Pool ID
+        Value: !GetAtt awsTutorialUGCStack.Outputs.awsTutorialCognitoUserPoolId
+        Export:
+            Name: !Sub '2:Cognito-User-Pool-Id'
+    awsTutorialCognitoIdentityPoolId:
+        Description: Cognito Identity Pool ID
+        Value: !GetAtt awsTutorialUGCStack.Outputs.awsTutorialCognitoIdentityPoolId
+        Export:
+            Name: !Sub '3:Cognito-Identity-Pool-Id'
+    awsTutorialCognitoUserPoolClientId:
+        Description: Cognito User Pool Client ID
+        Value: !GetAtt awsTutorialUGCStack.Outputs.awsTutorialCognitoUserPoolClientId
+        Export:
+            Name: !Sub '4:Cognito-User-Pool-Client-Id'
+    awsTutorialCognitoUserPoolClient:
+        Description: Link to Cognito User Pool Client, copy client secret from this page
+        Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/cognito/v2/idp/user-pools/${awsTutorialUGCStack.Outputs.awsTutorialCognitoUserPoolId}/applications/app-clients/${awsTutorialUGCStack.Outputs.awsTutorialCognitoUserPoolClientId}/quick-setup-guide?region=${AWS::Region}"
+        Export:
+            Name: !Sub '5:Link-to-Cognito-User-Pool-Client'
+    awsTutorialCognitoUserPoolClientDomain:
+        Description: Cognito User Pool Client domain
+        Value: !GetAtt awsTutorialUGCStack.Outputs.awsTutorialUserPoolDomain
+        Export:
+            Name: !Sub '6:Cognito-User-Pool-Client-Domain'

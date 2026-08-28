@@ -1,0 +1,146 @@
+[gd_scene format=3 uid="uid://cjtlb5cceofbb"]
+
+[ext_resource type="Script" uid="uid://bquxlgxj5armv" path="res://scripts/notification.gd" id="1_a8rcd"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_eroug"]
+
+[sub_resource type="Animation" id="Animation_j6hwb"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("PanelContainer:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Color(1, 1, 1, 248.43076)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("PanelContainer:offset_top")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [20.0]
+}
+
+[sub_resource type="Animation" id="Animation_a8rcd"]
+resource_name = "pop up"
+length = 6.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("PanelContainer:modulate")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5, 5.5, 6),
+"transitions": PackedFloat32Array(5, 1, 0.2, 1),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 248.43076), Color(1, 1, 1, 248.43076), Color(1, 1, 1, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("PanelContainer:offset_top")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 10),
+"update": 0,
+"values": [-50.0, 20.0]
+}
+tracks/2/type = "method"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath(".")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(6),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"queue_free"
+}]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_j6hwb"]
+_data = {
+&"RESET": SubResource("Animation_j6hwb"),
+&"pop up": SubResource("Animation_a8rcd")
+}
+
+[node name="Notification" type="Control" unique_id=1355894288]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_a8rcd")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=706111843]
+modulate = Color(1, 1, 1, 248.43076)
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_top = 20.0
+offset_right = -20.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxEmpty_eroug")
+
+[node name="Background" type="ColorRect" parent="PanelContainer" unique_id=1556181371]
+layout_mode = 2
+color = Color(0, 0.4745098, 0.41960785, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=1415898247]
+layout_mode = 2
+theme_override_constants/margin_left = 7
+theme_override_constants/margin_top = 2
+theme_override_constants/margin_right = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="message" type="Label" parent="PanelContainer/MarginContainer" unique_id=137165358]
+layout_mode = 2
+text = "sdasdasd
+asdasd
+asdasd"
+
+[node name="Control" type="Control" parent="PanelContainer" unique_id=1568866712]
+layout_mode = 2
+
+[node name="Border" type="ColorRect" parent="PanelContainer/Control" unique_id=42223726]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0, 0.3019608, 0.2509804, 1)
+
+[node name="Control2" type="Control" parent="PanelContainer" unique_id=992559425]
+layout_mode = 2
+
+[node name="Border" type="ColorRect" parent="PanelContainer/Control2" unique_id=1971334926]
+custom_minimum_size = Vector2(5, 0)
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+grow_vertical = 2
+color = Color(0, 0.3019608, 0.2509804, 1)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=391227242]
+libraries/ = SubResource("AnimationLibrary_j6hwb")
